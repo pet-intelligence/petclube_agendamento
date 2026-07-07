@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pet Clube | Painel do negócio</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      window.PETCLUB_API_URL = window.location.hostname.endsWith("github.io")
+        ? "https://api.petintelligence.com.br"
+        : "";
+    </script>
+    <script src="owner.js" defer></script>
+  </head>
+  <body class="owner-shell">
+    <header class="owner-topbar">
+      <a class="owner-brand" href="owner.html" aria-label="Pet Clube painel do negocio">
+        <span>PC</span>
+        <div><strong>Pet Clube</strong><small>Painel do negócio</small></div>
+      </a>
+      <a class="button-link secondary" href="index.html">Ver página do cliente</a>
+    </header>
+
+    <main class="owner-page">
+      <section class="owner-heading">
+        <div>
+          <p>Operação</p>
+          <h1>Agendamentos de hoje</h1>
+        </div>
+        <div class="owner-tools muted">CSV/export e analytics: espaço futuro</div>
+      </section>
+
+      <section class="owner-panel">
+        <div class="filters-row">
+          <label>
+            Data
+            <input id="filter-date" type="date" />
+          </label>
+          <label>
+            Status
+            <select id="filter-status"></select>
+          </label>
+        </div>
+        <div id="owner-warning" class="notice hidden"></div>
+        <div class="table-wrap">
+          <table class="appointments-table">
+            <thead>
+              <tr>
+                <th>Horário</th>
+                <th>Pet e tutor</th>
+                <th>Serviço</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
