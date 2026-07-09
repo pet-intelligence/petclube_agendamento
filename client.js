@@ -30,6 +30,7 @@ const BUSINESS_HOURS = {
 
 let currentStep = 0;
 let selectedPrimaryService = PRIMARY_SERVICES[0];
+let backendOnline = false;
 
 const form = document.querySelector("#booking-form");
 const stepTabs = [...document.querySelectorAll(".step-tab")];
@@ -71,6 +72,7 @@ function init() {
   updateKnownClientVisibility();
   updateTransportFields();
   updateDogTaxiNote();
+  checkBackendHealth();
   loadAvailability();
   goToStep(0);
 }
@@ -186,8 +188,11 @@ async function loadAvailability() {
     warning.classList.add("hidden");
     renderSlots(availability.slots || []);
   } catch (error) {
-    warning.textContent = "Backend indisponível. O formulário continua aberto, mas a disponibilidade não pode ser confirmada agora.";
-    warning.classList.remove("hidden");
+    const online = await checkBackendHealth();
+    if (!online) {
+      warning.textContent = "Backend indisponível. O formulário continua aberto, mas a disponibilidade não pode ser confirmada agora.";
+      warning.classList.remove("hidden");
+    }
     renderSlots(defaultSlotsForDate(dateInput.value).map((time) => ({ time, available: true })));
   }
 }
@@ -245,18 +250,28 @@ async function submitBooking(event) {
   try {
     await apiRequest("/api/bookings", { method: "POST", body: JSON.stringify(payload) });
     warning.classList.add("hidden");
+    saveCustomerData(payload);
+    success.classList.remove("hidden");
+    resetForm();
+    goToStep(0);
+    success.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
-    savePendingBooking(payload);
-    warning.textContent = "Backend indisponível. O pedido foi salvo neste navegador como fallback simples.";
+    const online = await checkBackendHealth();
+    if (!online) {
+      savePendingBooking(payload);
+      saveCustomerData(payload);
+      success.classList.remove("hidden");
+      resetForm();
+      goToStep(0);
+      warning.textContent = "Backend indisponível. O pedido foi salvo neste navegador como fallback simples.";
+    } else {
+      warning.textContent = error.message || "Não foi possível enviar o agendamento.";
+    }
     warning.classList.remove("hidden");
+  } finally {
+    confirmButton.disabled = false;
+    confirmButton.textContent = "Confirmar agendamento";
   }
-  saveCustomerData(payload);
-  success.classList.remove("hidden");
-  resetForm();
-  confirmButton.disabled = false;
-  confirmButton.textContent = "Confirmar agendamento";
-  goToStep(0);
-  success.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function buildPayload() {
@@ -339,6 +354,19 @@ function historyTextFor(phone) {
   const recent = (history[phone] || []).filter(isRecentHistory).slice(0, 6);
   if (!recent.length) return "Dados encontrados. Ainda não há histórico recente salvo neste navegador.";
   return `Dados encontrados. Histórico recente: ${recent.map((item) => `${formatDate(item.appointment_date)} - ${item.service_type}`).join(" | ")}`;
+}
+
+async function checkBackendHealth() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/health`, { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    backendOnline = response.ok && data.ok === true;
+  } catch (error) {
+    backendOnline = false;
+  }
+  warning.classList.toggle("hidden", backendOnline);
+  if (!backendOnline && !warning.textContent) warning.textContent = "Backend indisponível. O formulário continua aberto em modo emergencial.";
+  return backendOnline;
 }
 
 async function apiRequest(path, options = {}) {
