@@ -1,4 +1,4 @@
-const API_BASE_URL = (window.PETCLUB_API_URL || "").replace(/\/$/, "");
+const API_BASE_URL = (window.PETCLUB_API_URL || "https://api.petintelligence.com.br").replace(/\/$/, "");
 const CUSTOMER_PROFILE_KEY = "pet_clube_customer_profiles";
 const CUSTOMER_HISTORY_KEY = "pet_clube_customer_history";
 const PENDING_BOOKINGS_KEY = "pet_clube_pending_bookings";
