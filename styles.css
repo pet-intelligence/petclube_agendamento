@@ -259,13 +259,16 @@ input:focus, select:focus, textarea:focus {
 }
 .owner-heading p { margin: 0 0 8px; color: var(--green-dark); font-weight: 900; }
 .owner-heading h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.8rem); }
-.owner-tools { padding: 10px 12px; background: var(--white); border: 1px dashed var(--line); border-radius: var(--radius); }
+.owner-tools { display: flex; gap: 8px; padding: 10px 12px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); }
+.owner-auth { max-width: 460px; margin: 42px auto; }
+.owner-auth h1 { margin: 0 0 18px; font-size: 1.8rem; }
+.auth-form { display: grid; gap: 14px; }
 .filters-row { display: grid; grid-template-columns: 220px 220px; gap: 12px; margin-bottom: 14px; }
 .table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; min-width: 820px; }
+table { width: 100%; border-collapse: collapse; min-width: 980px; }
 th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 th { color: var(--muted); font-size: .82rem; text-transform: uppercase; }
-td span, td small { display: block; margin-top: 4px; color: var(--muted); }
+td span, td small { display: block; margin-top: 4px; color: var(--muted); line-height: 1.35; }
 .status-pill {
   display: inline-flex;
   min-width: 96px;
