@@ -121,7 +121,7 @@ function renderBookings() {
           <small>${escapeHtml(booking.booking_id || booking.id || "")}</small>
         </td>
         <td>
-          ${pets.map((pet) => `<div class="owner-pet"><strong>${escapeHtml(pet.pet_name || "Pet não informado")}</strong><span>${escapeHtml(pet.pet_type || "Pet")} · ${escapeHtml(pet.pet_size || "Porte não informado")} · ${escapeHtml(pet.service_type || service)}</span></div>`).join("")}
+          ${pets.map((pet) => `<div class="owner-pet"><strong>${escapeHtml(pet.pet_name || "Pet não informado")}</strong><span>${escapeHtml(pet.pet_type || "Pet")} · ${escapeHtml(pet.pet_size || "Porte não informado")} · ${escapeHtml(pet.service_type || service)}</span><small>Pelagem: ${escapeHtml(profileLabel("coat", pet.coat_type))} · Fase: ${escapeHtml(profileLabel("life", pet.life_stage))} · Castrado(a): ${escapeHtml(profileLabel("neutered", pet.neutered_status))}</small></div>`).join("")}
           <span>${escapeHtml(booking.tutor_name || "Tutor não informado")} · WhatsApp: ${escapeHtml(booking.tutor_phone || booking.whatsapp || "Não informado")}</span>
           ${meta.map(([label, value]) => `<small>${escapeHtml(label)}: ${escapeHtml(value)}</small>`).join("")}
         </td>
@@ -247,4 +247,9 @@ function slug(value) {
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
+}
+
+function profileLabel(kind, value) {
+  const labels = { coat: { short:"Pelo curto",medium:"Pelo médio ou semilongo",long_straight:"Pelo longo liso ou sedoso",long_wavy:"Pelo longo ondulado",curly:"Pelo cacheado ou encaracolado",double:"Dupla pelagem",wire:"Pelo duro ou pelo de arame",corded:"Pelagem encordoada ou peculiar",hairless:"Sem pelo",other:"Outro",unknown:"Não sei informar" }, life: { puppy:"Filhote",adult:"Adulto",senior:"Idoso",unknown:"Não sei informar" }, neutered: { yes:"Sim",no:"Não",unknown:"Não sei informar" } };
+  return labels[kind][value] || value || "Não informado";
 }
