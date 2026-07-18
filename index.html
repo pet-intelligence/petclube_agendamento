@@ -1,12 +1,38 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PetClub SP | Agendamento</title><link rel="stylesheet" href="styles.css"><script>window.PETCLUB_API_URL=window.location.hostname.endsWith("github.io")?"https://api.petintelligence.com.br":"";</script><script src="app.js" defer></script></head>
-<body class="client-shell"><header class="client-topbar"><a class="client-brand" href="index.html"><span>PC</span><div><strong>PetClub SP</strong><small>O clube preferido do seu pet.</small></div></a></header><main class="client-main">
-<section class="client-hero compact-hero"><p class="eyebrow">PetClub SP</p><h1>Bem-vindo(a) à PetClub SP</h1><p>Agende os cuidados de cada pet com segurança.</p></section><div id="notice" class="notice hidden"></div><div id="success" class="success hidden"></div>
-<section id="welcome" class="step-panel auth-choice"><h2>Você já é nosso cliente?</h2><button class="button primary" data-auth="login">Sim, já sou cliente</button><button class="button secondary" data-auth="register">Não, quero me cadastrar</button></section>
-<section id="auth" class="step-panel hidden"><button type="button" class="button secondary" id="auth-back">Voltar</button><form id="login-form" class="hidden"><h2>Entrar</h2><div class="field-grid two"><label>WhatsApp<input name="whatsapp" inputmode="tel" required placeholder="(11) 99999-9999"></label><label>PIN de 6 números<input name="pin" inputmode="numeric" pattern="\d{6}" maxlength="6" type="password" required></label></div><button class="button primary">Entrar</button></form>
-<form id="register-form" class="hidden"><h2>Cadastro do tutor</h2><div class="field-grid two"><label>Nome completo<input name="tutor_name" required></label><label>WhatsApp<input name="whatsapp" inputmode="tel" required placeholder="(11) 99999-9999"></label><label>E-mail opcional<input name="email" type="email"></label><label>Crie um PIN de 6 números<input name="pin" inputmode="numeric" pattern="\d{6}" maxlength="6" type="password" required></label></div><h3>Primeiro pet</h3><div id="registration-pet"></div><button class="button primary">Cadastrar</button></form></section>
-<section id="customer-app" class="hidden"><div class="owner-heading"><div><p>Conta do cliente</p><h1 id="customer-name"></h1></div><button id="logout" class="button secondary">Sair</button></div>
-<section class="step-panel"><div class="section-heading"><h2>Meus pets</h2><button id="new-pet" class="button secondary">Cadastrar novo pet</button></div><div id="pets-list" class="pet-profile-list"></div><form id="pet-form" class="hidden pet-editor"><h3 id="pet-form-title">Cadastrar novo pet</h3><input type="hidden" name="pet_id"><div id="pet-fields"></div><div class="form-actions"><button type="button" id="cancel-pet" class="button secondary">Cancelar</button><button class="button primary">Salvar pet</button></div></form></section>
-<form id="booking-form" class="step-panel booking-panel"><h2>Novo agendamento</h2><h3>Selecione os pets e o serviço de cada um</h3><div id="booking-pets" class="booking-pet-list"></div><div id="date-fields" class="field-grid two"><label id="timed-date-label">Data desejada<input name="appointment_date" type="date"></label><label id="timed-hour-label">Horário<select name="appointment_hour"><option value="">Selecione a data</option></select></label><label id="entry-label" class="hidden">Data de entrada<input name="entry_date" type="date"></label><label id="exit-label" class="hidden">Data de saída<input name="exit_date" type="date"></label></div><p id="duration-note" class="field-note"></p>
-<h3>Leva e traz</h3><label>Opção de transporte<select name="transport_option"><option>Não, vou levar até a loja</option><option>Sim, buscar meu pet</option><option>Sim, entregar meu pet</option><option>Sim, buscar e entregar</option></select></label><div id="transport-fields" class="field-grid two hidden"><label>Endereço completo<input name="address"></label><label>Complemento<input name="address_complement"></label><label>Bairro<input name="neighborhood"></label><label>Ponto de referência<input name="reference_point"></label><label>Link de localização opcional<input name="location_link" type="url"></label></div>
-<h3>Observações</h3><label>Observação opcional<textarea name="notes" placeholder="Cuidados especiais para este agendamento"></textarea></label><button class="button primary" type="submit">Confirmar agendamento</button></form></section>
-</main></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PetClub SP | Agendamento</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>window.PETCLUB_API_URL=window.location.hostname.endsWith("github.io")?"https://api.petintelligence.com.br":"";</script>
+  <script src="app.js" defer></script>
+</head>
+<body class="client-shell">
+<header class="client-topbar"><a class="client-brand" href="index.html"><span>PC</span><div><strong>PetClub SP</strong><small>O clube preferido do seu pet.</small></div></a></header>
+<main class="client-main simple-client">
+  <section class="client-hero compact-hero"><p class="eyebrow">PetClub SP</p><h1>Agende com rapidez</h1><p>Escolha o cuidado ideal para cada pet.</p></section>
+  <div id="notice" class="notice hidden" role="alert"></div>
+  <div id="success" class="success hidden" role="status">Agendamento recebido! Em breve a equipe do PetClub SP irá confirmar.</div>
+  <div class="step-layout">
+    <nav class="steps-nav" aria-label="Etapas do agendamento">
+      <button type="button" class="step-tab active" data-step="0">1. Tutor</button>
+      <button type="button" class="step-tab" data-step="1">2. Pets</button>
+      <button type="button" class="step-tab" data-step="2">3. Serviços</button>
+      <button type="button" class="step-tab" data-step="3">4. Leva e traz</button>
+      <button type="button" class="step-tab" data-step="4">5. Data e horário</button>
+      <button type="button" class="step-tab" data-step="5">6. Resumo</button>
+    </nav>
+    <form id="booking-form" class="step-panel" novalidate>
+      <section class="form-step active" data-step-panel="0"><h2>Tutor</h2><div class="field-grid two"><label>Nome<input name="tutor_name" autocomplete="name" required></label><label>WhatsApp<input name="whatsapp" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" required></label><label class="span-2">E-mail <small>Opcional</small><input name="email" type="email" autocomplete="email"></label></div></section>
+      <section class="form-step" data-step-panel="1"><h2>Pets</h2><p class="step-copy">Informe apenas os pets deste agendamento.</p><div id="pets-editor"></div><button id="add-pet" type="button" class="button secondary add-pet-button">Incluir outro pet neste agendamento</button></section>
+      <section class="form-step" data-step-panel="2"><h2>Serviços</h2><p class="step-copy">Escolha um serviço individual para cada pet.</p><div id="pet-services" class="pet-service-list"></div><p id="duration-note" class="field-note"></p></section>
+      <section class="form-step" data-step-panel="3"><h2>Leva e traz</h2><label>Opção de transporte<select name="transport_option" id="transport-option"><option>Não, vou levar até a loja</option><option>Sim, buscar meu pet</option><option>Sim, entregar meu pet</option><option>Sim, buscar e entregar</option></select></label><div id="transport-fields" class="field-grid two hidden"><label class="span-2">Endereço completo<input name="address"></label><label>Complemento<input name="address_complement"></label><label>Bairro<input name="neighborhood"></label><label>Ponto de referência<input name="reference_point"></label><label>Link de localização <small>Opcional</small><input name="location_link" type="url"></label></div></section>
+      <section class="form-step" data-step-panel="4"><h2>Data e horário</h2><div id="timed-date-fields" class="field-grid two"><label>Data desejada<input name="appointment_date" id="appointment-date" type="date"></label><label>Horário<select name="appointment_hour" id="appointment-hour"><option value="">Selecione a data</option></select></label><p id="date-message" class="field-note span-2"></p></div><div id="range-date-fields" class="field-grid two hidden"><label>Data de entrada<input name="entry_date" id="entry-date" type="date"></label><label>Data de saída<input name="exit_date" id="exit-date" type="date"></label><p class="field-note span-2">A capacidade é verificada para todo o período, incluindo entrada e saída.</p></div><label class="notes-field">Observações <small>Opcional</small><textarea name="notes" placeholder="Cuidados especiais para este agendamento"></textarea></label></section>
+      <section class="form-step" data-step-panel="5"><h2>Resumo</h2><div id="booking-summary" class="summary-list"></div></section>
+      <div class="form-actions"><button id="back-button" type="button" class="button secondary">Voltar</button><button id="next-button" type="button" class="button primary">Próximo</button><button id="confirm-button" type="submit" class="button primary hidden">Confirmar agendamento</button></div>
+    </form>
+  </div>
+</main>
+</body>
+</html>
