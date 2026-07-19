@@ -12,7 +12,6 @@ const PRIMARY_SERVICES = [
 ];
 
 const ADDITIONAL_SERVICES = [
-  { id: "dog-taxi", name: "Dog Taxi", price: 15 },
   { id: "tosa-higienica", name: "Tosa Higiênica", price: 15 },
   { id: "hidratacao", name: "Hidratação", price: 15 }
 ];
@@ -28,7 +27,6 @@ const primaryOptions = document.querySelector("#primary-service-options");
 const additionalOptions = document.querySelector("#additional-service-options");
 const transportOption = document.querySelector("#transport-option");
 const transportFields = document.querySelector("#transport-fields");
-const dogTaxiNote = document.querySelector("#dog-taxi-note");
 const dateInput = document.querySelector("#appointment-date");
 const hourSelect = document.querySelector("#appointment-hour");
 const dateMessage = document.querySelector("#date-message");
@@ -70,7 +68,6 @@ function init() {
   });
   additionalPets.addEventListener("change", updateBookingMode);
   updateTransportFields();
-  updateDogTaxiNote();
   loadAvailability();
   goToStep(0);
 }
@@ -104,7 +101,6 @@ function renderAdditionalServices() {
 
   additionalOptions.querySelectorAll("input").forEach((input) => {
     input.addEventListener("change", () => {
-      updateDogTaxiNote();
       if (currentStep === 5) renderSummary();
     });
   });
@@ -127,16 +123,16 @@ function navigateToStep(targetStep) {
 }
 
 function validateCurrentStep() {
-  if (currentStep >= 2) {
-    const details = bookingMode();
-    if (details.error) {
-      warning.textContent = details.error;
-      warning.classList.remove("hidden");
-      return false;
-    }
-  }
   const fields = [...stepPanels[currentStep].querySelectorAll("input, select, textarea")];
-  return fields.every((field) => field.reportValidity());
+  if (!fields.every((field) => field.reportValidity())) return false;
+  const mode = bookingMode();
+  if (currentStep === 4 && mode.group !== "timed" && exitDateInput.value < entryDateInput.value) {
+    warning.textContent = "A data de saída não pode ser anterior à data de entrada.";
+    warning.classList.remove("hidden");
+    return false;
+  }
+  warning.classList.add("hidden");
+  return true;
 }
 
 function goToStep(step) {
@@ -164,10 +160,6 @@ function updateTransportFields() {
     input.required = needsTransport && input.name === "address";
     if (!needsTransport) input.value = "";
   });
-}
-
-function updateDogTaxiNote() {
-  dogTaxiNote.classList.toggle("hidden", !selectedAdditionalServices().some((service) => service.id === "dog-taxi"));
 }
 
 async function loadAvailability() {
@@ -208,6 +200,7 @@ function renderSummary() {
   const dateText = payload.service_group === "timed"
     ? `${formatDate(payload.appointment_date)} às ${payload.appointment_hour || "Não informado"} · ${payload.calculated_duration_minutes} min`
     : `${formatDate(payload.entry_date)} a ${formatDate(payload.exit_date)} · ${payload.pet_count} pet(s)`;
+  const transportDetails = [payload.address, payload.address_complement, payload.neighborhood, payload.reference_point, payload.location_link].filter(Boolean).join(" · ");
   const items = [
     ["Tutor", `${payload.tutor_name} | ${payload.whatsapp}`],
     ["Pets", payload.pets.map((pet) => `${pet.pet_name} | ${pet.pet_size} | ${pet.service_type}`).join(" · ")],
@@ -216,6 +209,7 @@ function renderSummary() {
     ["Leva e traz", payload.transport_label],
     ["Observações", payload.notes || "Sem observações"]
   ];
+  if (payload.transport_needed) items.splice(5, 0, ["Endereço do leva e traz", transportDetails]);
   summary.innerHTML = items.map(([label, value]) => `
     <div class="summary-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>
   `).join("");
@@ -273,6 +267,7 @@ function buildPayload() {
     temperament: "Não informado",
     service_type: selectedPrimaryService.name,
     service_group: mode.group,
+    additional_services: additionalNames,
     calculated_duration_minutes: mode.group === "timed" ? totalDuration(pets) : null,
     transport_needed: transportNeeded,
     transport_label: data.transport_option,
@@ -304,7 +299,6 @@ function resetForm() {
   entryDateInput.value = entryDateInput.min;
   exitDateInput.value = exitDateInput.min;
   updateTransportFields();
-  updateDogTaxiNote();
   updateBookingMode();
   loadAvailability();
 }
@@ -356,9 +350,9 @@ function addPet() {
       <legend>Pet ${index}</legend>
       <div class="field-grid two">
         <label>Nome do pet<input name="extra_pet_name" required placeholder="Ex.: Luna" /></label>
+        <label>Tipo do pet<select name="extra_pet_type" required><option>Cachorro</option><option>Gato</option><option>Outro</option></select></label>
         <label>Porte<select name="extra_pet_size" required><option>Pequeno</option><option>Médio</option><option>Grande</option><option>Gigante</option></select></label>
         <label>Tipo de pelagem<select name="extra_pet_coat" required><option value="Curta">Curta</option><option value="Longa">Longa</option></select></label>
-        <label>Serviço<select name="extra_pet_service" required>${PRIMARY_SERVICES.map((service) => `<option>${escapeHtml(service.name)}</option>`).join("")}</select></label>
         <label>Observações opcionais<input name="extra_pet_notes" /></label>
       </div>
       <button type="button" class="button secondary remove-pet">Remover pet</button>
@@ -388,12 +382,12 @@ function currentPets(data = Object.fromEntries(new FormData(form).entries())) {
   additionalPets.querySelectorAll(".additional-pet").forEach((container) => {
     pets.push({
       pet_name: container.querySelector('[name="extra_pet_name"]').value,
-      pet_type: "Cachorro",
+      pet_type: container.querySelector('[name="extra_pet_type"]').value,
       pet_size: container.querySelector('[name="extra_pet_size"]').value,
       coat_type: container.querySelector('[name="extra_pet_coat"]').value,
       life_stage: "",
       neutered_status: "",
-      service_type: container.querySelector('[name="extra_pet_service"]').value,
+      service_type: selectedPrimaryService.name,
       notes: container.querySelector('[name="extra_pet_notes"]').value,
       temperament: "Não informado"
     });
@@ -407,10 +401,8 @@ function serviceGroup(service) {
   return "timed";
 }
 
-function bookingMode(pets = currentPets()) {
-  const groups = pets.map((pet) => serviceGroup(pet.service_type));
-  if (new Set(groups).size > 1) return { error: "Não é permitido misturar serviços com horário, Creche e Hotel no mesmo agendamento." };
-  return { group: groups[0] };
+function bookingMode() {
+  return { group: serviceGroup(selectedPrimaryService.name) };
 }
 
 function durationForPet(pet) {
@@ -428,16 +420,16 @@ function totalDuration(pets = currentPets()) {
 
 function updateBookingMode() {
   const mode = bookingMode();
-  const isTimed = !mode.error && mode.group === "timed";
+  const isTimed = mode.group === "timed";
   timedDateFields.classList.toggle("hidden", !isTimed);
-  rangeDateFields.classList.toggle("hidden", isTimed || Boolean(mode.error));
+  rangeDateFields.classList.toggle("hidden", isTimed);
   dateInput.required = isTimed;
   hourSelect.required = isTimed;
-  entryDateInput.required = !isTimed && !mode.error;
-  exitDateInput.required = !isTimed && !mode.error;
+  entryDateInput.required = !isTimed;
+  exitDateInput.required = !isTimed;
   document.querySelector(".business-hours-box").classList.toggle("hidden", !isTimed);
-  dateMessage.textContent = mode.error || (!isTimed ? "A capacidade é verificada por pet em cada dia do intervalo." : dateMessage.textContent);
-  dateMessage.classList.toggle("warning-text", Boolean(mode.error));
+  dateMessage.textContent = isTimed ? "" : "A capacidade é validada para todo o período selecionado.";
+  dateMessage.classList.remove("warning-text");
   if (isTimed) loadAvailability();
 }
 

@@ -6,9 +6,7 @@
     <title>PetClub SP | Agendamento</title>
     <link rel="stylesheet" href="styles.css" />
     <script>
-      window.PETCLUB_API_URL = window.location.hostname.endsWith("github.io")
-        ? "https://api.petintelligence.com.br"
-        : "";
+      window.PETCLUB_API_URL = "https://api.petintelligence.com.br";
     </script>
     <script src="app.js" defer></script>
   </head>
@@ -116,7 +114,6 @@
                 <option>Sim, buscar e entregar</option>
               </select>
             </label>
-            <p id="dog-taxi-note" class="field-note hidden">Dog Taxi foi escolhido como adicional e aparecerá no resumo.</p>
             <div id="transport-fields" class="field-grid two hidden">
               <label>Endereço completo
                 <input name="address" placeholder="Rua, número" />
