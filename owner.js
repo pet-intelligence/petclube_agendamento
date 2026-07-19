@@ -85,12 +85,13 @@ function renderBookings() {
     const service = booking.service_main || booking.service_type || booking.service_name || "Serviço não informado";
     const additional = booking.additional_services || "Sem adicionais";
     const transport = booking.transport_needed ? booking.transport_label || "Sim" : booking.transport_label || "Não";
+    const transportActions = transportActionsForLabel(booking.transport_label);
     const transportAction = booking.transport_needed ? `
       <div class="transport-action">
         <label>Previsão (min)
           <input type="number" min="1" max="1440" inputmode="numeric" data-transport-eta="${escapeHtml(booking.booking_id || booking.id)}" value="${escapeHtml(booking.transport_eta_minutes || "")}" placeholder="Opcional" />
         </label>
-        <button type="button" class="status-button" data-transport-id="${escapeHtml(booking.booking_id || booking.id)}">Motorista a caminho</button>
+        ${transportActions.map((action) => `<button type="button" class="status-button" data-transport-id="${escapeHtml(booking.booking_id || booking.id)}" data-transport-action="${action}">Motorista a caminho para ${action}</button>`).join("")}
         ${booking.transport_notified_at ? `<small>Último aviso: ${escapeHtml(formatDateTime(booking.transport_notified_at))}</small>` : ""}
       </div>` : "";
     const address = [booking.address, booking.neighborhood, booking.address_complement, booking.reference_point].filter(Boolean).join(" · ");
@@ -145,13 +146,14 @@ async function handleOwnerAction(event) {
   const transportButton = event.target.closest("button[data-transport-id]");
   if (transportButton) {
     const bookingId = transportButton.dataset.transportId;
+    const transportAction = transportButton.dataset.transportAction;
     const etaInput = bookingsBody.querySelector(`[data-transport-eta="${CSS.escape(bookingId)}"]`);
     const eta = etaInput?.value.trim() || null;
     transportButton.disabled = true;
     try {
       await apiRequest(`/api/bookings/${encodeURIComponent(bookingId)}/transport-status`, {
         method: "POST",
-        body: JSON.stringify({ transport_status: "motorista_a_caminho", transport_eta_minutes: eta })
+        body: JSON.stringify({ transport_status: "motorista_a_caminho", transport_eta_minutes: eta, transport_action: transportAction })
       });
       warning.classList.add("hidden");
       await loadBookings();
@@ -243,6 +245,15 @@ function formatMoney(value) {
 
 function slug(value) {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function transportActionsForLabel(label) {
+  const normalizedLabel = slug(label);
+  const hasBuscar = normalizedLabel.includes("buscar");
+  const hasEntregar = normalizedLabel.includes("entregar");
+  if (hasBuscar && !hasEntregar) return ["buscar"];
+  if (hasEntregar && !hasBuscar) return ["entregar"];
+  return ["buscar", "entregar"];
 }
 
 function escapeHtml(value) {
